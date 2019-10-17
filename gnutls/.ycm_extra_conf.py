@@ -1,4 +1,4 @@
-import os
+from os.path import abspath, dirname
 import ycm_core
 
 flags = [
@@ -12,7 +12,7 @@ flags = [
 ]
 
 def DirectoryOfThisScript():
-    return os.path.dirname(os.path.abspath(__file__))
+    return dirname(abspath(__file__))
 
 def Settings(filename, language, **kwargs):
     if language == 'cfamily':
