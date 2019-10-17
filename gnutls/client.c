@@ -1,11 +1,8 @@
 /**
- * The simplest SSL/TLS connection program using GnuTLS 3.6.10
+ * A simple HTTPS client using GnuTLS 3.6.10.
  *
- * Contains X.509 auth and basic certificate verification.
- *
- * Sources:
- * - GnuTLS's own examples, in particular ex-client-{anon,psk,x509}.c
- *      https://github.com/gnutls/gnutls/tree/gnutls_3_5_19/doc/examples
+ * Handles SNI, OCSP stapling, basic certificate validation (hostname match,
+ * expiration, trusted CA).
  */
 #include <assert.h>
 #include <stdio.h>
@@ -21,10 +18,15 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/ocsp.h>
 
+#define BUFFER_SIZE  1024
 #define DEFAULT_HOST "www.example.com"
-#define PORT "443"
+#define PORT         "443"
+#define REQUEST_TEMPLATE    \
+    "GET / HTTP/1.1\r\n"    \
+    "Host: %s\r\n"          \
+    "Connection: close\r\n" \
+    "\r\n"
 
-#define BUFFER_SIZE 1024
 /* This enforces at least 128-bit security level for the ciphersuite/algorithms, and
  * TLS version 1.3 or 1.2.
  *
@@ -52,12 +54,6 @@
         fprintf(stderr, "Error: %s\n", error); \
         goto cleanup; \
     } while (0)
-
-#define REQUEST_TEMPLATE    \
-    "GET / HTTP/1.1\r\n"    \
-    "Host: %s\r\n"          \
-    "Connection: close\r\n" \
-    "\r\n"
 
 
 int main(int argc, char **argv) {
