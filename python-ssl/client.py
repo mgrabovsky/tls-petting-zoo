@@ -37,7 +37,9 @@ if __name__ == '__main__':
     # Connect to the server via a simple TCP socket.
     with socket.create_connection((hostname, port)) as sock:
         try:
-            # Establish a TLS tunnel inside the pure socket.
+            # Establish a TLS tunnel inside the pure socket. The underlying OpenSSL
+            # performs hostname checking and certificate validation by default.
+            # Revocation status is not checked.
             with context.wrap_socket(sock, server_hostname=hostname) as tunnel:
                 # Print negotiated TLS version.
                 logger.info('Ciphersuite, TLS version and security level: %s',
