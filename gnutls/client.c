@@ -24,7 +24,7 @@
 #define DEFAULT_HOST "www.example.com"
 #define PORT "443"
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1024
 /* This enforces at least 128-bit security level for the ciphersuite/algorithms, and
  * TLS version 1.3 or 1.2.
  *
