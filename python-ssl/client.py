@@ -23,8 +23,9 @@ if __name__ == '__main__':
             help='The host\'s TCP port to connect to.')
     args = parser.parse_args()
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logging.basicConfig(stream=sys.stderr)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
     hostname, port = args.host, args.port
 
@@ -67,9 +68,8 @@ if __name__ == '__main__':
                     if not bb:
                         break
                     logger.info('Read %d bytes from server.', len(bb))
-                    print('Read {} bytes from server.'.format(len(bb)))
         except ssl.SSLCertVerificationError as e:
-            logger.error('TLS error: %s', e)
+            logger.error('Certificate verification failed: %s', e)
             sys.exit(1)
 
     logger.info('Connection closed.')
