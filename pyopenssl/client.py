@@ -67,6 +67,12 @@ if __name__ == '__main__':
             logger.error('Handshake failed.')
             sys.exit(1)
 
+        # Check that a certificate was offered.
+        # TODO: Is this necessary? (See above.)
+        if not tunnel.get_peer_certificate():
+            logger.error('Server sent no certificate.')
+            sys.exit(1)
+
         logger.info('TLS tunnel established.')
         logger.info('Negotiated TLS version: %s', tunnel.get_protocol_version_name())
         logger.info('Negotiated ciphersuite: %s', tunnel.get_cipher_name())
@@ -85,6 +91,11 @@ if __name__ == '__main__':
             except ssl.ZeroReturnError:
                 logger.info('Server closed connection.')
                 break
+            except ssl.SysCallError as e:
+                if e.args[0] == -1:
+                    # End-of-file received. Accept gracefully.
+                    break
+                raise e
 
         tunnel.shutdown()
         logger.info('TLS tunnel closed.')
