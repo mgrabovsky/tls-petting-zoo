@@ -63,12 +63,17 @@ if __name__ == '__main__':
         # unnecessary.
         try:
             tunnel.do_handshake()
-        except ssl.Error:
-            logger.error('Handshake failed.')
+        except ssl.Error as e:
+            if (isinstance(e.args[0], list) and isinstance(e.args[0][0], tuple) and
+                    len(e.args[0][0]) > 2):
+                reason = e.args[0][0][2]
+            else:
+                reason = e.args
+            logger.error('Handshake failed: %s', reason)
             sys.exit(1)
 
         # Check that a certificate was offered.
-        # TODO: Is this necessary? (See above.)
+        # TODO: Is this necessary? (See above around set_verify.)
         if not tunnel.get_peer_certificate():
             logger.error('Server sent no certificate.')
             sys.exit(1)
