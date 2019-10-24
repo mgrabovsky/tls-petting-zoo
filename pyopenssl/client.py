@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from argparse import ArgumentParser
 import logging
 import socket
@@ -18,8 +17,6 @@ REQUEST_TEMPLATE = (
         "Connection: close\r\n"
         "\r\n")
 
-from pprint import pprint
-
 def verify_certificate(_tunnel, _cert, _error, _depth, ret):
     return ret
 
@@ -33,23 +30,23 @@ if __name__ == '__main__':
 
     logging.basicConfig(stream=sys.stderr)
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     hostname, port = args.host, args.port
 
+    # Only allow TLS 1.2 or better.
+    context = ssl.Context(ssl.TLSv1_2_METHOD)
+    context.set_default_verify_paths()
+    # Verify the server certificate during handshake. This should check for
+    # possible expiration and validity of chain (trusted root and valid
+    # intermediates).
+    # NOTE: Does not check for hostname or IP match by default in current
+    # version.
+    context.set_verify(ssl.VERIFY_PEER | ssl.VERIFY_FAIL_IF_NO_PEER_CERT,
+            verify_certificate)
+
     with socket.create_connection((hostname, port)) as sock:
         logger.info('Socket connection established.')
-
-        # Only allow TLS 1.2 or better.
-        context = ssl.Context(ssl.TLSv1_2_METHOD)
-        # Verify the server certificate during handshake. This should check for
-        # possible expiration and validity of chain (trusted root and valid
-        # intermediates).
-        # NOTE: Does not check for hostname and IP match by default in current
-        # version.
-        context.set_verify(ssl.VERIFY_PEER | ssl.VERIFY_FAIL_IF_NO_PEER_CERT,
-                verify_certificate)
-        context.set_default_verify_paths()
 
         tunnel = ssl.Connection(context, sock)
         # SNI: Let the web server know which domain we inted to connect to.
@@ -58,7 +55,6 @@ if __name__ == '__main__':
         # Activate the TLS connection. This by itself does not initiate the
         # handshake.
         tunnel.set_connect_state()
-        logger.info('TLS activated.')
 
         # We can perform the handshake manually if we choose to, but it's
         # unnecessary.
@@ -68,6 +64,7 @@ if __name__ == '__main__':
             logger.error('Handshake failed.')
             sys.exit(1)
 
+        logger.info('TLS tunnel established.')
         logger.info('Negotiated TLS version: %s', tunnel.get_protocol_version_name())
         logger.info('Negotiated ciphersuite: %s', tunnel.get_cipher_name())
 
@@ -87,7 +84,7 @@ if __name__ == '__main__':
                 break
 
         tunnel.shutdown()
-        logger.info('TLS shut down.')
+        logger.info('TLS tunnel closed.')
 
     logger.info('Socket connection closed.')
 

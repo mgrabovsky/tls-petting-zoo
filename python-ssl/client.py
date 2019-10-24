@@ -37,14 +37,18 @@ if __name__ == '__main__':
 
     # Connect to the server via a simple TCP socket.
     with socket.create_connection((hostname, port)) as sock:
+        logger.info('Socket connection established.')
+
         try:
             # Establish a TLS tunnel inside the pure socket. The underlying OpenSSL
             # performs hostname checking and certificate validation by default.
             # Revocation status is not checked.
             with context.wrap_socket(sock, server_hostname=hostname) as tunnel:
+                logger.info('TLS tunnel established.')
                 # Print negotiated TLS version.
-                logger.info('Ciphersuite, TLS version and security level: %s',
-                        tunnel.cipher())
+                negotiated = tunnel.cipher()
+                logger.info('Negotiated TLS version: %s', negotiated[1])
+                logger.info('Negotiated ciphersuite: %s', negotiated[0])
 
                 # Create the HTTP from the template and send it to the server.
                 request = REQUEST_TEMPLATE.format(host=hostname).encode('ascii')
@@ -53,8 +57,8 @@ if __name__ == '__main__':
                     # request in on go rather than send() which may (or may not) send
                     # the request in chunks.
                     tunnel.sendall(request)
-                    # Note: .read() and .write() are deprecated in favour of the
-                    # socket-standard .recv() and .send().
+                    # NOTE: read() and write() are deprecated in favour of recv() and
+                    # send() which are native to sockets.
                 except:
                     # TODO: Which specific exception is raised? No info in doc or
                     # direct source code.
@@ -68,9 +72,11 @@ if __name__ == '__main__':
                     if not bb:
                         break
                     logger.info('Read %d bytes from server.', len(bb))
+
+            logger.info('TLS tunnel closed.')
         except ssl.SSLCertVerificationError as e:
             logger.error('Certificate verification failed: %s', e)
             sys.exit(1)
 
-    logger.info('Connection closed.')
+    logger.info('Socket connection closed.')
 
