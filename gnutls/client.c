@@ -20,7 +20,7 @@
 
 #define BUFFER_SIZE  1024
 #define DEFAULT_HOST "www.example.com"
-#define PORT         "443"
+#define DEFAULT_PORT "443"
 #define REQUEST_TEMPLATE    \
     "GET / HTTP/1.1\r\n"    \
     "Host: %s\r\n"          \
@@ -63,20 +63,33 @@ int main(int argc, char **argv) {
     /* The HTTP request string. */
     char *request = NULL;
 
-    /* Name of the host we're connecting to. */
+    /* Name of the host and port number we're connecting to. */
     const char *hostname = DEFAULT_HOST;
+    const char *port     = DEFAULT_PORT;
 
     /* TCP/IP socket descriptor. */
     int sock = -1;
 
-    gnutls_session_t session = NULL;
-    gnutls_certificate_credentials_t creds = NULL;
+    gnutls_certificate_credentials_t creds   = NULL;
+    gnutls_session_t                 session = NULL;
 
-    if (argc == 2) {
-        hostname = argv[1];
-    } else if (argc > 2) {
-        fprintf(stderr, "Invalid number of arguments. Expected zero or one.\n");
-        fprintf(stderr, "Usage: %s [hostname]\n", argv[0]);
+    /* Parse command line options. */
+    int opt;
+    while ((opt = getopt(argc, argv, "p:")) != -1) {
+        switch (opt) {
+        case 'p':
+            port = optarg;
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [-p port] [hostname]\n", argv[0]);
+            return 1;
+        }
+    }
+
+    if (optind == argc - 1) {
+        hostname = argv[optind];
+    } else if (optind < argc - 1) {
+        fprintf(stderr, "Error: Too many arguments.\n");
         return 1;
     }
 
@@ -115,7 +128,7 @@ int main(int argc, char **argv) {
 
         struct addrinfo *result = NULL;
 
-        if (getaddrinfo(hostname, PORT, &hints, &result) != 0 ||
+        if (getaddrinfo(hostname, port, &hints, &result) != 0 ||
                 result == NULL)
         {
             CUSTOM_FAIL("Could not connect to the server.");
