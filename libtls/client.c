@@ -3,13 +3,14 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <tls.h>
 
 #define BUFFER_SIZE  1024
 #define CA_FILE      "/etc/ssl/certs/ca-bundle.crt"
 #define DEFAULT_HOST "www.example.com"
-#define PORT         "443"
+#define DEFAULT_PORT "443"
 #define REQUEST_TEMPLATE    \
     "GET / HTTP/1.1\r\n"    \
     "Host: %s\r\n"          \
@@ -41,19 +42,31 @@ int main(int argc, char **argv) {
     char *request = NULL;
     int request_len = 0;
 
-    /* Name of the host we're connecting to. */
+    /* Name of the host and port number we're connecting to. */
     const char *hostname = DEFAULT_HOST;
+    const char *port     = DEFAULT_PORT;
 
     /* TLS channel and socket connection structures. */
-    struct tls        *ctx    = NULL;
     struct tls_config *config = NULL;
+    struct tls        *ctx    = NULL;
 
-    /* Check number of arguments. Print usage message if they're wrong. */
-    if (argc == 2) {
-        hostname = argv[1];
-    } else if (argc > 2) {
-        fprintf(stderr, "Invalid number of arguments. Expected zero or one.\n");
-        fprintf(stderr, "Usage: %s [hostname]\n", argv[0]);
+    /* Parse command line options. */
+    int opt;
+    while ((opt = getopt(argc, argv, "p:")) != -1) {
+        switch (opt) {
+        case 'p':
+            port = optarg;
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [-p port] [hostname]\n", argv[0]);
+            return 1;
+        }
+    }
+
+    if (optind == argc - 1) {
+        hostname = argv[optind];
+    } else if (optind < argc - 1) {
+        fprintf(stderr, "Error: Too many arguments.\n");
         return 1;
     }
 
@@ -77,13 +90,8 @@ int main(int argc, char **argv) {
     /* Apply the configuration settings to the object. */
     LIBRESSL_CHECK(tls_configure(ctx, config));
 
-    /* Require a stapled OCSP response from the server (must-staple TLS extension).
-     * Most servers don't send this.
-     */
-    /* tls_config_ocsp_require_stapling(config); */
-
-    fprintf(stderr, "Attempting to connect to %s:%s...\n", hostname, PORT);
-    LIBRESSL_CHECK(tls_connect(ctx, hostname, PORT));
+    fprintf(stderr, "Attempting to connect to %s:%s...\n", hostname, port);
+    LIBRESSL_CHECK(tls_connect(ctx, hostname, port));
 
     {
         /* Send the request to the server inside the TLS tunnel. */
