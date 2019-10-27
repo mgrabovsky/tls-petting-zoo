@@ -1,8 +1,7 @@
 /**
  * A simple HTTPS client using GnuTLS 3.6.10.
  *
- * Handles SNI, OCSP stapling, basic certificate validation (hostname match,
- * expiration, trusted CA).
+ * Handles SNI, basic certificate validation (hostname match, expiration, trusted CA).
  */
 #include <assert.h>
 #include <stdio.h>
@@ -16,7 +15,6 @@
 #include <unistd.h>
 
 #include <gnutls/gnutls.h>
-#include <gnutls/ocsp.h>
 
 #define BUFFER_SIZE  1024
 #define DEFAULT_HOST "www.example.com"
@@ -112,8 +110,6 @@ int main(int argc, char **argv) {
     GNUTLS_CHECK(gnutls_certificate_set_x509_system_trust(creds));
     GNUTLS_CHECK(gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, creds));
     gnutls_session_set_verify_cert(session, hostname, 0);
-    /* Request an OCSP response from the server (OCSP stapling). (Is this default?) */
-    GNUTLS_CHECK(gnutls_ocsp_status_request_enable_client(session, NULL, 0, NULL));
 
     /* Set default cipher suite priorities. */
     GNUTLS_CHECK(gnutls_priority_set_direct(session, PRIORITY_STRING, NULL));
@@ -174,36 +170,6 @@ int main(int argc, char **argv) {
             gnutls_free(out.data);
         }
         GNUTLS_FAIL(ret);
-    }
-
-    /* Parse stapled OCSP response if available. */
-    gnutls_datum_t ocsp_response_raw = { 0 };
-    if ((ret = gnutls_ocsp_status_request_get(session, &ocsp_response_raw)) != 0) {
-        if (ret == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE) {
-            fprintf(stderr, "OCSP stapling: No response received.\n");
-            /* TODO: Ideally, we should now either query the OCSP server directly or
-             * try CRL if available. */
-        } else {
-            GNUTLS_FAIL(ret);
-        }
-    } else {
-        gnutls_ocsp_resp_t ocsp_response = NULL;
-        GNUTLS_CHECK(gnutls_ocsp_resp_init(&ocsp_response));
-        GNUTLS_CHECK(gnutls_ocsp_resp_import(ocsp_response, &ocsp_response_raw));
-
-        gnutls_ocsp_cert_status_t status;
-        GNUTLS_CHECK(gnutls_ocsp_resp_get_single(ocsp_response, 0, NULL, NULL, NULL,
-                    NULL, &status, NULL, NULL, NULL, NULL));
-
-        if (status == GNUTLS_OCSP_CERT_GOOD) {
-            fprintf(stderr, "OCSP stapling: Status good.\n");
-        } else if (status == GNUTLS_OCSP_CERT_REVOKED) {
-            fprintf(stderr, "OCSP stapling: Certificate is revoked.\n");
-        } else {
-            fprintf(stderr, "OCSP stapling: Unknown status.\n");
-        }
-
-        gnutls_ocsp_resp_deinit(ocsp_response);
     }
 
     GNUTLS_CHECK(gnutls_record_send(session, request, strlen(request)));
