@@ -25,14 +25,6 @@
     "Connection: close\r\n" \
     "\r\n"
 
-/* This enforces at least 128-bit security level for the ciphersuite/algorithms, and
- * TLS version 1.3 or 1.2.
- *
- * This allows the use of SHA-1 and some other weak choices, but apparently some
- * servers still can't handle more security at once.
- */
-#define PRIORITY_STRING "SECURE256:+SECURE128:-VERS-ALL:+VERS-TLS1.3:+VERS-TLS1.2"
-
 /* Rudimentary error handling. */
 #define GNUTLS_FAIL(x) do { \
         gnutls_perror(x); \
@@ -102,17 +94,11 @@ int main(int argc, char **argv) {
     /* Initialize the SSL/TLS channel. */
     GNUTLS_CHECK(gnutls_init(&session, GNUTLS_CLIENT));
 
-    /* Set requested server name for virtualized servers (SNI). */
-    GNUTLS_CHECK(gnutls_server_name_set(session, GNUTLS_NAME_DNS, hostname, strlen(hostname)));
-
     /* Verify server certificate with default certificate authorities. */
     GNUTLS_CHECK(gnutls_certificate_allocate_credentials(&creds));
     GNUTLS_CHECK(gnutls_certificate_set_x509_system_trust(creds));
     GNUTLS_CHECK(gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, creds));
     gnutls_session_set_verify_cert(session, hostname, 0);
-
-    /* Set default cipher suite priorities. */
-    GNUTLS_CHECK(gnutls_priority_set_direct(session, PRIORITY_STRING, NULL));
 
     /* Connect to the server. */
     {
