@@ -5,10 +5,9 @@ import socket
 import ssl
 import sys
 
+BUFFER_SIZE      = 1024
 DEFAULT_HOSTNAME = 'www.example.com'
 DEFAULT_PORT     = 443
-
-BUFFER_SIZE      = 1024
 REQUEST_TEMPLATE = (
         "GET / HTTP/1.1\r\n"
         "Host: {host}\r\n"
@@ -67,11 +66,11 @@ if __name__ == '__main__':
 
                 # Read data from the tunnel until EOF
                 while True:
-                    #print(tunnel.recv(BUFFER_SIZE).decode('utf-8'))
-                    bb = tunnel.recv(BUFFER_SIZE)
-                    if not bb:
+                    bytes_read = tunnel.recv(BUFFER_SIZE)
+                    if not bytes_read:
                         break
-                    logger.info('Read %d bytes from server.', len(bb))
+                    logger.info('Read %d bytes from server.', len(bytes_read))
+                    sys.stdout.buffer.write(bytes_read)
 
             logger.info('TLS tunnel closed.')
         except ssl.SSLCertVerificationError as e:

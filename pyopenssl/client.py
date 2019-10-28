@@ -7,10 +7,9 @@ import sys
 
 import OpenSSL.SSL as ssl
 
+BUFFER_SIZE      = 1024
 DEFAULT_HOSTNAME = 'www.example.com'
 DEFAULT_PORT     = 443
-
-BUFFER_SIZE      = 1024
 REQUEST_TEMPLATE = (
         "GET / HTTP/1.1\r\n"
         "Host: {host}\r\n"
@@ -89,10 +88,11 @@ if __name__ == '__main__':
 
         while True:
             try:
-                bb = tunnel.recv(BUFFER_SIZE)
-                if not bb:
+                bytes_read = tunnel.recv(BUFFER_SIZE)
+                if not bytes_read:
                     break
-                logger.info('Read %d bytes from server.', len(bb))
+                logger.info('Read %d bytes from server.', len(bytes_read))
+                sys.stdout.buffer.write(bytes_read)
             except ssl.ZeroReturnError:
                 logger.info('Server closed connection.')
                 break
