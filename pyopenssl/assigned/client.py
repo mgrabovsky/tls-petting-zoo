@@ -69,8 +69,6 @@ if __name__ == '__main__':
             sys.exit(1)
 
         logger.info('TLS tunnel established.')
-        logger.info('Negotiated TLS version: %s', tunnel.get_protocol_version_name())
-        logger.info('Negotiated ciphersuite: %s', tunnel.get_cipher_name())
 
         # Send the HTTP request inside the tunnel. The handshake is now performed
         # behind the scenes.

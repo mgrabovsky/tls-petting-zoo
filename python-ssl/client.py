@@ -44,10 +44,6 @@ if __name__ == '__main__':
             # Revocation status is not checked.
             with context.wrap_socket(sock, server_hostname=hostname) as tunnel:
                 logger.info('TLS tunnel established.')
-                # Print negotiated TLS version.
-                negotiated = tunnel.cipher()
-                logger.info('Negotiated TLS version: %s', negotiated[1])
-                logger.info('Negotiated ciphersuite: %s', negotiated[0])
 
                 # Create the HTTP from the template and send it to the server.
                 request = REQUEST_TEMPLATE.format(host=hostname).encode('ascii')
