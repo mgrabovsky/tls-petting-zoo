@@ -8,7 +8,6 @@
 #include <tls.h>
 
 #define BUFFER_SIZE  1024
-#define CA_FILE      "/etc/ssl/certs/ca-bundle.crt"
 #define DEFAULT_HOST "www.example.com"
 #define DEFAULT_PORT "443"
 #define REQUEST_TEMPLATE    \
@@ -82,8 +81,6 @@ int main(int argc, char **argv) {
      */
     LIBRESSL_CHECK_NULL(config = tls_config_new());
 
-    LIBRESSL_CHECK(tls_config_set_ca_file(config, CA_FILE));
-
     /* Initialise a TLS tunnel client-side context. */
     LIBRESSL_CHECK_NULL(ctx = tls_client());
 
@@ -130,7 +127,7 @@ int main(int argc, char **argv) {
             }
 
             fprintf(stderr, "Read %d bytes from server.\n", ret);
-            /* fwrite(buffer, 1, ret, stdout); */
+            fwrite(buffer, 1, ret, stdout);
         }
     }
 

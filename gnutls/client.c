@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     {
         if (ret > 0) {
             fprintf(stderr, "Read %d bytes from server.\n", ret);
-            /* fwrite(buffer, 1, ret, stdout); */
+            fwrite(buffer, 1, ret, stdout);
         }
     }
 
