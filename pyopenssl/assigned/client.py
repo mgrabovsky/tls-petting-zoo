@@ -2,7 +2,6 @@
 from argparse import ArgumentParser
 import logging
 import socket
-import ssl
 import sys
 
 import OpenSSL.SSL as ssl
@@ -35,8 +34,6 @@ if __name__ == '__main__':
 
     context = ssl.Context(ssl.TLSv1_METHOD)
     context.set_default_verify_paths()
-    # Verify the server certificate during handshake. This should check for possible
-    # expiration and validity of chain (trusted root and valid intermediates).
     context.set_verify(ssl.VERIFY_PEER, verify_certificate)
 
     with socket.create_connection((hostname, port)) as sock:

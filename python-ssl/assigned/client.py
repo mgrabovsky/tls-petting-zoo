@@ -33,9 +33,7 @@ if __name__ == '__main__':
         logger.info('Socket connection established.')
 
         try:
-            # Establish a TLS tunnel inside the pure socket. The underlying OpenSSL
-            # performs hostname checking and certificate validation by default.
-            # Revocation status is not checked.
+            # Establish a TLS tunnel inside the pure socket.
             with ssl.wrap_socket(sock) as tunnel:
                 logger.info('TLS tunnel established.')
 
