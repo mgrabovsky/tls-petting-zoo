@@ -38,8 +38,6 @@ if __name__ == '__main__':
     # Verify the server certificate during handshake. This should check for possible
     # expiration and validity of chain (trusted root and valid intermediates).
     context.set_verify(ssl.VERIFY_PEER, verify_certificate)
-    # Only allow the most secure ciphersuites available in TLS >= 1.2.
-    context.set_cipher_list(b'AES256:+HIGH:!aNULL:!kDHE:!kRSA')
 
     with socket.create_connection((hostname, port)) as sock:
         logger.info('Socket connection established.')
