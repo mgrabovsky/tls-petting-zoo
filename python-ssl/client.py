@@ -31,8 +31,10 @@ if __name__ == '__main__':
     # Create a context for the TLS tunnel context.
     context = ssl.create_default_context()
     # Disallow SSL and TLS < 1.2.
-    context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
-                        ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    # Another possibility:
+    # context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
+    #                     ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
 
     # Connect to the server via a simple TCP socket.
     with socket.create_connection((hostname, port)) as sock:
