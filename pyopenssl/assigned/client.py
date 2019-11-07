@@ -45,6 +45,8 @@ if __name__ == '__main__':
         logger.info('Socket connection established.')
 
         tunnel = ssl.Connection(context, sock)
+        # SNI: Let the web server know which domain we inted to connect to.
+        tunnel.set_tlsext_host_name(hostname.encode('ascii'))
 
         # Activate the TLS connection. This by itself does not initiate the
         # handshake.
